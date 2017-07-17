@@ -54,7 +54,7 @@ Article.fetchAll = function() {
       eTag = XMLHttpRequest.getResponseHeader('ETag');
     }
   });
-  if (localStorage.eTag === eTag) {
+  if (localStorage.eTag && localStorage.eTag === eTag) {
     // When rawData is already in localStorage,
     // we can load it with the .loadAll function above,
     // and then render the index page (using the proper method on the articleView object).
