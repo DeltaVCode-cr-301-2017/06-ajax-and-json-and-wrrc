@@ -45,18 +45,41 @@ Article.loadAll = function(rawData) {
 
 // This function will retrieve the data from either a local or remote source,
 // and process it, then hand off control to the View.
+var rawData;
 Article.fetchAll = function() {
-  if (localStorage.rawData) {
-    // When rawData is already in localStorage,
-    // we can load it with the .loadAll function above,
-    // and then render the index page (using the proper method on the articleView object).
-    Article.loadAll(); //TODO: What do we pass in to loadAll()?
-    //TODO: What method do we call to render the index page?
-  } else {
-    // TODO: When we don't already have the rawData,
-    // we need to retrieve the JSON file from the server with AJAX (which jQuery method is best for this?),
-    // cache it in localStorage so we can skip the server call next time,
-    // then load all the data into Article.all with the .loadAll function above,
-    // and then render the index page.
-  }
+  $.ajax({
+    type: 'HEAD',
+    url: 'data/hackerIpsum.json',
+    complete: function (xhr) {
+      console.log('head complete');
+      var Etag = xhr.getResponseHeader('ETag');
+      console.log(Etag);
+      if(localStorage.etag) {
+        console.log('etag is in localStorage');
+        if(Etag === localStorage.etag){
+          console.log('data up to date');
+          console.log('localStorage data found');
+          rawData = JSON.parse(localStorage.getItem('rawData'));
+          Article.loadAll(rawData);
+          articleView.initIndexPage();
+        } else {
+          localStorage.clear();
+          location.reload();
+        }
+      } else {
+        console.log('data not up to date');
+        localStorage.setItem('etag', JSON.stringify(Etag));
+        $.getJSON('data/hackerIpsum.json').done(function(data){
+          rawData = data;
+          console.log(rawData);
+          localStorage.setItem('rawData', JSON.stringify(rawData));
+          Article.loadAll(rawData);
+          articleView.initIndexPage();
+        });
+      }
+    },
+    fail: function () {
+      console.log('head failed');
+    }
+  });
 }
